@@ -23,10 +23,10 @@ class ArticleController
             global $databaseManager;
             $query = $databaseManager->connection->query("SELECT * FROM $this->table");
             $rawArticles = $query->fetchAll(PDO::FETCH_ASSOC);
-            echo var_dump($rawArticles);
+            // echo var_dump($rawArticles);
             $articles = [];
             foreach ($rawArticles as $rawArticle) {
-                $articles[] = new Article($rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date']);
+                $articles[] = new Article($rawArticle['id'], $rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date'], $rawArticle['image'] ?? '');
             }
 
             return $articles;
@@ -35,9 +35,16 @@ class ArticleController
         }
     }
 
-    public function show()
+    public function show(int $id = 1)
     {
-        // TODO: this can be used for a detail page
+        // global $databaseManager;
+        // try {
+        //     $query = $databaseManager->connection->query("SELECT * FROM $this->table WHERE id = '1' LIMIT 1");
+        //     $result = $query->fetch(PDO::FETCH_ASSOC);
+        // } catch (PDOException $e) {
+        //     echo "query failed" . $e->getMessage();
+        // }
+
     }
     function create()
     {
@@ -49,7 +56,7 @@ class ArticleController
                 if (isset($_POST['Image']))
                     $databaseManager->connection->query("INSERT INTO $this->table (title,description,image)  VALUES ('$_POST[title]', '$_POST[description]', '$_POST[Image]')");
                 else
-                    $databaseManager->connection->query("INSERT INTO $this->table ('title','description')  VALUES ('$_POST[title]', '$_POST[description]'");
+                    $databaseManager->connection->query("INSERT INTO $this->table (title,description)  VALUES ('$_POST[title]', '$_POST[description]'");
             } catch (PDOException $e) {
                 echo "query failed" . $e->getMessage();
 
@@ -59,13 +66,31 @@ class ArticleController
 
     function edit()
     {
-        global $cardRepository;
-        $edit = $cardRepository->find($_GET["name"]);
+        global $databaseManager;
+        $id = (int) $_GET["id"] ?? 1;
+        try {
+            $query = $databaseManager->connection->query("SELECT * FROM $this->table WHERE id = '$id'");
+            $edit = $query->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            echo "query failed" . $e->getMessage();
+        }
+
         require 'View/articles/edit.php';
 
-        if (!empty($_POST['name']) && !empty($_POST['type']) && !empty($_POST['skill'])) {
-            $cardRepository->update($edit['name'], $_POST['name'], $_POST['type'], $_POST['skill'], isset($_POST['obtained']) ? 1 : 0);
-            header("Location: ?");
+        echo var_dump($edit) . '<br>';
+        echo var_dump($_POST);
+        if (!empty($_POST['title']) && !empty($_POST['description'])) {
+            try {
+                $prep = $databaseManager->connection->prepare("UPDATE $this->table SET title= :title ,description= :description ,image= :image  WHERE id = '$id'; ");
+                $prep->bindParam(':title', $_POST["title"]);
+                $prep->bindParam(':description', $_POST["description"]);
+                $prep->bindParam(':image', $_POST["image"]);
+
+                $prep->execute();
+            } catch (PDOException $e) {
+                echo "query failed" . $e->getMessage();
+            }
+            header("Location: ?page=articles-index");
 
         } else
             echo "fields can not be left empty!";

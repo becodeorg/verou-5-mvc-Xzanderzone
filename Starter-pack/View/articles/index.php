@@ -7,6 +7,10 @@
     <ul>
         <?php foreach ($articles as $article): ?>
             <li><?= $article->title ?> (<?= $article->formatPublishDate() ?>)</li>
+
+            <ol><a href="?page=articles-edit&id=<?= $article->getId() ?>">edit</a>
+                <a href="?page=articles-delete&id=<?= $article->getId() ?>">delete</a>
+            </ol>
         <?php endforeach; ?>
     </ul>
 </section>
