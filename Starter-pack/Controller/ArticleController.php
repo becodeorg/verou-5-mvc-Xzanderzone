@@ -1,9 +1,14 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
+require_once '../config.php';
+require_once 'DatabaseManager.php';
 
+$databaseManager = new DatabaseManager($config['host'], $config['user'], $config['password'], $config['dbname']);
+$databaseManager->connect();
 class ArticleController
 {
+    private $table = 'articles';
     public function index()
     {
         // Load all required data
@@ -17,17 +22,20 @@ class ArticleController
     private function getArticles()
     {
         // TODO: prepare the database connection
-        // Note: you might want to use a re-usable databaseManager class - the choice is yours
-        // TODO: fetch all articles as $rawArticles (as a simple array)
-        $rawArticles = [];
+        try {
+            global $databaseManager;
+            $query = $databaseManager->connection->query("SELECT * FROM $this->table");
+            $rawArticles = $query->fetchAll(PDO::FETCH_ASSOC);
+            echo var_dump($rawArticles);
+            $articles = [];
+            foreach ($rawArticles as $rawArticle) {
+                $articles[] = new Article($rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date']);
+            }
 
-        $articles = [];
-        foreach ($rawArticles as $rawArticle) {
-            // We are converting an article from a "dumb" array to a much more flexible class
-            $articles[] = new Article($rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date']);
+            return $articles;
+        } catch (PDOException $e) {
+            echo "query failed" . $e->getMessage();
         }
-
-        return $articles;
     }
 
     public function show()
