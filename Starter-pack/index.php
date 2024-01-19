@@ -21,7 +21,17 @@ switch ($page) {
         (new ArticleController())->index();
         break;
     case 'articles-show':
-    // TODO: detail page
+        (new ArticleController())->show();
+        break;
+    case 'articles-create':
+        (new ArticleController())->create();
+        break;
+    case 'articles-edit':
+        (new ArticleController())->edit();
+        break;
+    case 'articles-delete':
+        (new ArticleController())->delete();
+        break;
     case 'home':
     default:
         (new HomepageController())->index();
