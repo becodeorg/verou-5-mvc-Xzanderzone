@@ -14,14 +14,11 @@ class ArticleController
         // Load all required data
         $articles = $this->getArticles();
 
-        // Load the view
         require 'View/articles/index.php';
     }
 
-    // Note: this function can also be used in a repository - the choice is yours
     private function getArticles()
     {
-        // TODO: prepare the database connection
         try {
             global $databaseManager;
             $query = $databaseManager->connection->query("SELECT * FROM $this->table");
