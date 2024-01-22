@@ -28,24 +28,27 @@ class ArticleController
             foreach ($rawArticles as $rawArticle) {
                 $articles[] = new Article($rawArticle['id'], $rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date'], $rawArticle['image'] ?? '');
             }
-
             return $articles;
         } catch (PDOException $e) {
             echo "query failed" . $e->getMessage();
         }
     }
 
-    public function show(int $id = 1)
+    public function show()
     {
-        // global $databaseManager;
-        // try {
-        //     $query = $databaseManager->connection->query("SELECT * FROM $this->table WHERE id = '1' LIMIT 1");
-        //     $result = $query->fetch(PDO::FETCH_ASSOC);
-        // } catch (PDOException $e) {
-        //     echo "query failed" . $e->getMessage();
-        // }
-
+        global $databaseManager;
+        try {
+            $prep = $databaseManager->connection->prepare("SELECT * FROM $this->table WHERE id = :id LIMIT 1");
+            $prep->bindParam(':id', $_GET["id"]);
+            $prep->execute();
+            $rawArticle = $prep->fetch(PDO::FETCH_ASSOC);
+            $article = new Article($rawArticle['id'], $rawArticle['title'], $rawArticle['description'], $rawArticle['publish_date'], $rawArticle['image'] ?? '');
+            require 'View/articles/show.php';
+        } catch (PDOException $e) {
+            echo "query failed" . $e->getMessage();
+        }
     }
+
     function create()
     {
         require 'View/articles/create.php';
@@ -65,7 +68,7 @@ class ArticleController
     }
 
     function edit()
-    {
+    { //find and display article via _get id
         global $databaseManager;
         $id = (int) $_GET["id"] ?? 1;
         try {
@@ -76,35 +79,47 @@ class ArticleController
         }
 
         require 'View/articles/edit.php';
-
-        echo var_dump($edit) . '<br>';
-        echo var_dump($_POST);
+        //update if fields are filled in
         if (!empty($_POST['title']) && !empty($_POST['description'])) {
             try {
                 $prep = $databaseManager->connection->prepare("UPDATE $this->table SET title= :title ,description= :description ,image= :image  WHERE id = '$id'; ");
                 $prep->bindParam(':title', $_POST["title"]);
                 $prep->bindParam(':description', $_POST["description"]);
                 $prep->bindParam(':image', $_POST["image"]);
-
                 $prep->execute();
             } catch (PDOException $e) {
                 echo "query failed" . $e->getMessage();
             }
             header("Location: ?page=articles-index");
-
         } else
             echo "fields can not be left empty!";
     }
+
     function delete()
     {
-        global $cardRepository;
+        global $databaseManager;
+        $id = (int) $_GET["id"] ?? 1;
         if (empty($_POST['delete'])) {
-            $edit = $cardRepository->find($_GET["name"]);
+            try {
+                $prep = $databaseManager->connection->prepare("SELECT * FROM $this->table WHERE id = :id");
+                $prep->bindParam(':id', $_GET["id"]);
+                $prep->execute();
+                $edit = $prep->fetch(PDO::FETCH_ASSOC);
+            } catch (PDOException $e) {
+                echo "query failed" . $e->getMessage();
+            }
             require 'View/articles/delete.php';
         } else if ($_POST['delete'] == 'confirm') {
-            $_POST['delete'] = 'deleted'; //stop multiple deletes
-            $cardRepository->delete($_GET['name']);
-            header("Location: ?");
+            echo "delete";
+            $_POST['delete'] = 'deleted'; //stop multiple delete attempts
+            try {
+                $prep = $databaseManager->connection->prepare("DELETE FROM $this->table WHERE id= :id ");
+                $prep->bindParam(':id', $_GET["id"]);
+                $prep->execute();
+            } catch (PDOException $e) {
+                echo "query failed" . $e->getMessage();
+            }
+            header("Location: ?page=articles-index");
         }
     }
 }

@@ -8,7 +8,8 @@
   <input disabled='true' class='description' value='<?= $edit["description"] ?>' name='description' type='text'>
   </input>
   <label for="publishdate">publishdate: </label>
-  <input disabled='true' class='publishdate' value='<?= $edit["publishdate"] ?>' name='publishdate' type='text'></input>
+  <input disabled='true' class='publishdate' value='<?= $edit["publish_date"] ?> ' name='publishdate'
+    type='text'></input>
   <label for="image">image:</label>
   <input disabled='true' class='image' value='<?= $edit["image"] ?? ' ' ?> ' name='image' type='text'>
   </input>
